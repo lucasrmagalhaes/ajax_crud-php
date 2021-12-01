@@ -26,21 +26,33 @@
                         </div>
 
                         <div class="modal-body">
-                            <input type="text" class="form-control" placeholder="Country Name..." id="countryName"><br>
+                            <div id="editContent">
+                                <input type="text" class="form-control" placeholder="Country Name..." id="countryName"><br>
+    
+                                <textarea 
+                                    class="form-control" 
+                                    id="shortDesc"
+                                    placeholder="Short Country Description">
+                                </textarea> <br>
+                                
+                                <textarea 
+                                    class="form-control" 
+                                    id="longDesc"
+                                    placeholder="Long Country Description">
+                                </textarea> <br>
+    
+                                <input type="hidden" id="editRowID" value="0">
+                            </div>
 
-                            <textarea 
-                                class="form-control" 
-                                id="shortDesc"
-                                placeholder="Short Country Description">
-                            </textarea> <br>
-                            
-                            <textarea 
-                                class="form-control" 
-                                id="longDesc"
-                                placeholder="Long Country Description">
-                            </textarea> <br>
-
-                            <input type="hidden" id="editRowID" value="0">
+                            <div id="showContent" style="display:none;">
+                                <h3>Short Description</h3>
+                                <div id="shortDescView"></div>
+                                
+                                <hr>
+                                
+                                <h3>Long Description</h3>
+                                <div id="longDescView" style="overflow-y: scroll; height: 300px;"></div>
+                            </div>
                         </div>
 
                         <div class="modal-footer">
@@ -95,14 +107,45 @@
             /** Modal */
             $(document).ready(function () {
                 $("#addNew").on('click', function () {
+                    $("#countryName").val("");
+                    $("#longDesc").val("");
+                    $("#shortDesc").val("");
                     $("#tableManager").modal('show');
+                });
+
+                $("#tableManager").on('hidden.bs.modal', function () {
+                    $("#showContent").fadeOut();
+                    $("#editContent").fadeIn();
+                    $("#editRowID").val(0);
+                    $("#longDesc").val("");
+                    $("#shortDesc").val("");
+                    $("#countryName").val("");
+                    $("#closeBtn").fadeOut();
+                    $("#manageBtn").attr('value', 'Add New').attr('onclick', "manageData('addNew')").fadeIn();
                 });
 
                 getExistingData(0, 50);
             });
             /** Modal */
 
-            function edit(rowID) {
+            function deleteRow(rowID) {
+                if (confirm('Are you sure?')) {
+                    $.ajax({
+                        url: 'ajax.php',
+                        method: 'POST',
+                        dataType: 'text',
+                        data: {
+                            key: 'deleteRow',
+                            rowID: rowID
+                        }, success: function (response) {
+                            $("#country_"+rowID).parent().remove();
+                            alert(response);
+                        }
+                    });
+                }
+            }
+
+            function viewORedit(rowID, type) {
                 $.ajax({
                     url: 'ajax.php',
                     method: 'POST',
@@ -111,12 +154,26 @@
                         key: 'getRowData',
                         rowID: rowID
                     }, success: function (response) {
-                        $("#editRowID").val(rowID);
-                        $("#countryName").val(response.countryName);
-                        $("#shortDesc").val(response.shortDesc);
-                        $("#longDesc").val(response.longDesc);
+                        if (type == "view") {
+                            $("#showContent").fadeIn();
+                            $("#editContent").fadeOut();
+                            $("#longDescView").html(response.longDesc);
+                            $("#shortDescView").html(response.shortDesc);
+                            $("#manageBtn").fadeOut();
+                            $("#closeBtn").fadeIn();
+                        } else {
+                            $("#editContent").fadeIn();
+                            $("#editRowID").val(rowID);
+                            $("#showContent").fadeOut();
+                            $("#longDesc").val(response.longDesc);
+                            $("#shortDesc").val(response.shortDesc);
+                            $("#countryName").val(response.countryName);
+                            $("#closeBtn").fadeOut();
+                            $("#manageBtn").attr('value', 'Save Changes').attr('onclick', "manageData('updateRow')");
+                        }
+
+                        $(".modal-title").html(response.countryName);
                         $("#tableManager").modal('show');
-                        $("#manageBtn").attr('value', 'Save Changes').attr('onclick', "manageData('updateRow')");
                     }
                 });
             }
@@ -165,6 +222,7 @@
                         }, success: function (response) {
                             if (response != "success") {
                                 alert(response);
+                                $("#tableManager").modal('hide');
                             } else {
                                 $("#country_"+editRowID.val()).html(name.val());
 
