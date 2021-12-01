@@ -3,6 +3,7 @@
 
     <head>
         <meta charset="UTF-8">
+
         <title>MySQL Table Manager With Bootstrap/jQuery/Ajax/PHP/MySQL</title>
 
         <link 
@@ -10,6 +11,8 @@
             integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
             crossorigin="anonymous"
         >
+
+        <link rel="stylesheet" href="css/dataTables.bootstrap.min.css">
     </head>
 
     <body>
@@ -36,6 +39,8 @@
                                 id="longDesc"
                                 placeholder="Long Country Description">
                             </textarea> <br>
+
+                            <input type="hidden" id="editRowID" value="0">
                         </div>
 
                         <div class="modal-footer">
@@ -83,6 +88,9 @@
             crossorigin="anonymous">
         </script>
 
+        <script src="js/jquery.dataTables.min.js" type="text/javascript"></script>
+        <script src="js/dataTables.bootstrap.min.js" type="text/javascript"></script>
+
         <script type="text/javascript">
             /** Modal */
             $(document).ready(function () {
@@ -90,9 +98,28 @@
                     $("#tableManager").modal('show');
                 });
 
-                getExistingData(0, 10);
+                getExistingData(0, 50);
             });
             /** Modal */
+
+            function edit(rowID) {
+                $.ajax({
+                    url: 'ajax.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        key: 'getRowData',
+                        rowID: rowID
+                    }, success: function (response) {
+                        $("#editRowID").val(rowID);
+                        $("#countryName").val(response.countryName);
+                        $("#shortDesc").val(response.shortDesc);
+                        $("#longDesc").val(response.longDesc);
+                        $("#tableManager").modal('show');
+                        $("#manageBtn").attr('value', 'Save Changes').attr('onclick', "manageData('updateRow')");
+                    }
+                });
+            }
 
             /** Dados Tabela */
             function getExistingData(start, limit) {
@@ -109,6 +136,8 @@
                             $('tbody').append(response);
                             start += limit;
                             getExistingData(start, limit);
+                        } else {
+                            $(".table").DataTable();
                         }
                     }
                 });
@@ -120,6 +149,7 @@
                 var name = $("#countryName");
                 var shortDesc = $("#shortDesc");
                 var longDesc = $("#longDesc");
+                var editRowID = $("#editRowID");
 
                 if (isNotEmpty(name) && isNotEmpty(shortDesc) && isNotEmpty(longDesc)) {
                     $.ajax({
@@ -130,9 +160,21 @@
                             key: key,
                             name: name.val(),
                             shortDesc: shortDesc.val(),
-                            longDesc: longDesc.val()
+                            longDesc: longDesc.val(),
+                            rowID: editRowID.val()
                         }, success: function (response) {
-                            alert(response);
+                            if (response != "success") {
+                                alert(response);
+                            } else {
+                                $("#country_"+editRowID.val()).html(name.val());
+
+                                name.val('');
+                                shortDesc.val('');
+                                longDesc.val('');
+
+                                $("#tableManager").modal('hide');
+                                $("#manageBtn").attr('value', 'Add').attr('onclick', "manageData('addNew')");
+                            }   
                         }
                     });
                 }
