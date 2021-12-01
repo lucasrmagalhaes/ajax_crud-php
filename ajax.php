@@ -13,7 +13,7 @@
 			$jsonArray = array(
 				'countryName' => $data['countryName'],
 				'shortDesc' => $data['shortDesc'],
-				'longDesc' => $data['longDesc'],
+				'longDesc' => $data['longDesc']
 			);
 
 			exit(json_encode($jsonArray));
@@ -32,10 +32,10 @@
 					$response .= '
 						<tr>
 							<td>'.$data["id"].'</td>
-							<td>'.$data["countryName"].'</td>
+							<td id="country_'.$data["id"].'">'.$data["countryName"].'</td>
 							<td>
 								<input type="button" onclick="edit('.$data["id"].')" value="Edit" class="btn btn-primary">
-								<input type="button" value="View" class="btn">
+								<input type="button" value="View" class="btn btn-success">
 								<input type="button" value="Delete" class="btn btn-danger">
 							</td>
 						</tr>
@@ -52,6 +52,11 @@
 		$shortDesc = $conn->real_escape_string($_POST['shortDesc']);
 		$longDesc = $conn->real_escape_string($_POST['longDesc']);
 		$rowID = $conn->real_escape_string($_POST['rowID']);
+
+		if ($_POST['key'] == 'updateRow') {
+			$conn->query("UPDATE country SET countryName='$name', shortDesc='$shortDesc', longDesc='$longDesc' WHERE id='$rowID'");
+			exit('success');
+		}
 
 		if ($_POST['key'] == 'addNew') {
 			$sql = $conn->query("SELECT id FROM country WHERE countryName = '$name'");
