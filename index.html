@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>MySQL Table Manager With Bootstrap/jQuery/Ajax/PHP/MySQL</title>
+
+        <link 
+            rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+            integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+            crossorigin="anonymous"
+        >
+    </head>
+
+    <body>
+        <div class="container" style="margin-top: 30px;">
+            <!-- Modal -->
+            <div id="tableManager" class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title">Country Name</h2>
+                        </div>
+
+                        <div class="modal-body">
+                            <input type="text" class="form-control" placeholder="Country Name..." id="countryName"><br>
+
+                            <textarea 
+                                class="form-control" 
+                                id="shortDesc"
+                                placeholder="Short Country Description">
+                            </textarea> <br>
+                            
+                            <textarea 
+                                class="form-control" 
+                                id="longDesc"
+                                placeholder="Long Country Description">
+                            </textarea> <br>
+                        </div>
+
+                        <div class="modal-footer">
+                            <input type="button" onclick="manageData('addNew')" value="Save" class="btn btn-success">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modal -->
+
+            <!-- Table -->
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <h2>MySQL Table Manager</h2>
+
+                    <input style="float: right" type="button" class="btn btn-success" id="addNew" value="Add New">
+
+                    <br><br>
+
+                    <table class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <td>ID</td>
+                                <td>Country Name</td>
+                                <td>Options</td>
+                            </tr>
+                        </thead>
+
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Table -->
+        </div>
+
+        <script 
+            src="http://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" 
+            crossorigin="anonymous">
+        </script>
+        
+        <script 
+            src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous">
+        </script>
+
+        <script type="text/javascript">
+            /** Modal */
+            $(document).ready(function () {
+                $("#addNew").on('click', function () {
+                    $("#tableManager").modal('show');
+                });
+
+                getExistingData(0, 10);
+            });
+            /** Modal */
+
+            /** Dados Tabela */
+            function getExistingData(start, limit) {
+                $.ajax({
+                    url: 'ajax.php',
+                    method: 'POST',
+                    dataType: 'text',
+                    data: {
+                        key: 'getExistingData',
+                        start: start,
+                        limit: limit
+                    }, success: function (response) {
+                        if (response != "reachedMax") {
+                            $('tbody').append(response);
+                            start += limit;
+                            getExistingData(start, limit);
+                        }
+                    }
+                });
+            }
+            /** Dados Tabela */
+
+            /** Modal - Salvar os campos */
+            function manageData(key) {
+                var name = $("#countryName");
+                var shortDesc = $("#shortDesc");
+                var longDesc = $("#longDesc");
+
+                if (isNotEmpty(name) && isNotEmpty(shortDesc) && isNotEmpty(longDesc)) {
+                    $.ajax({
+                        url: 'ajax.php',
+                        method: 'POST',
+                        dataType: 'text',
+                        data: {
+                            key: key,
+                            name: name.val(),
+                            shortDesc: shortDesc.val(),
+                            longDesc: longDesc.val()
+                        }, success: function (response) {
+                            alert(response);
+                        }
+                    });
+                }
+            }
+            /** Modal - Salvar os campos */
+
+            /** Validação */
+            function isNotEmpty(caller) {
+                if (caller.val() == '') {
+                    caller.css('border', '1px solid red');
+
+                    return false;
+                } else {
+                    caller.css('border', '');
+                }
+
+                return true;
+            }
+            /** Validação */
+        </script>
+    </body>
+</html>
